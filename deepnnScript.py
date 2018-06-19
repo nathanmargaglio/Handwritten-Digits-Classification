@@ -91,6 +91,7 @@ with tf.Session() as sess:
 
     # Training cycle
     for epoch in range(training_epochs):
+        print("Epoch:", epoch)
         avg_cost = 0.
         total_batch = int(train_features.shape[0] / batch_size)
         # Loop over all batches
