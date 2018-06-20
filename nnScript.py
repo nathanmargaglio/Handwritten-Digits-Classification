@@ -50,8 +50,7 @@ def preprocess():
      Some suggestions for preprocessing step:
      - feature selection"""
 
-    #mat = loadmat('mnist_all.mat')  # loads the MAT object as a Dictionary
-    mat = loadmat('mnist_sample.mat')  # loads the MAT object as a Dictionary
+    mat = loadmat('mnist_all.mat')  # loads the MAT object as a Dictionary
 
     # Pick a reasonable size for validation data
 
@@ -69,7 +68,6 @@ def preprocess():
     train_label_len = 0
     validation_label_len = 0
     # ------------Start to split the data set into 6 arrays-----------#
-
     for key in mat:
         # -----------when the set is training set--------------------#
         if "train" in key:
@@ -78,23 +76,21 @@ def preprocess():
             sap = range(tup.shape[0])
             tup_perm = np.random.permutation(sap)
             tup_len = len(tup)  # get the length of current training set
-            diff_count = 100  # originally hard coded as 1000
-            tag_len = tup_len - diff_count  # defines the number of examples which will be added into the training set
+            tag_len = tup_len - 1000  # defines the number of examples which will be added into the training set
 
             # ---------------------adding data to training set-------------------------#
-            print(len(tup))
-            train_preprocess[train_len:train_len + tag_len] = tup[tup_perm[diff_count:], :]
+            train_preprocess[train_len:train_len + tag_len] = tup[tup_perm[1000:], :]
             train_len += tag_len
 
             train_label_preprocess[train_label_len:train_label_len + tag_len] = label
             train_label_len += tag_len
 
             # ---------------------adding data to validation set-------------------------#
-            validation_preprocess[validation_len:validation_len + diff_count] = tup[tup_perm[0:diff_count], :]
-            validation_len += diff_count
+            validation_preprocess[validation_len:validation_len + 1000] = tup[tup_perm[0:1000], :]
+            validation_len += 1000
 
-            validation_label_preprocess[validation_label_len:validation_label_len + diff_count] = label
-            validation_label_len += diff_count
+            validation_label_preprocess[validation_label_len:validation_label_len + 1000] = label
+            validation_label_len += 1000
 
             # ---------------------adding data to test set-------------------------#
         elif "test" in key:
@@ -147,7 +143,7 @@ def preprocess():
 def nnObjFunction(params, *args):
     """% nnObjFunction computes the value of objective function (negative log 
     %   likelihood error function with regularization) given the parameters 
-    %   of Neural Networks, thetraining data, their corresponding training 
+    %   of Neural Networks, the training data, their corresponding training
     %   labels and lambda - regularization hyper-parameter.
 
     % Input:
@@ -189,12 +185,8 @@ def nnObjFunction(params, *args):
     obj_val = 0
 
     # Your code here
-    #
-    #
-    #
-    #
-    #
 
+    # Forward Propagation
 
 
     # Make sure you reshape the gradient matrices to a 1D array. for instance if your gradient matrices are grad_w1 and grad_w2
