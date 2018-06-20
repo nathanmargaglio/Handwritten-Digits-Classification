@@ -129,7 +129,15 @@ def preprocess():
     test_label = test_label_preprocess[test_perm]
 
     # Feature selection
-    # Your code here.
+    res = np.all(train_data == train_data[0, :], axis=0)
+    removable_indices = np.where(res)
+    used_indices = np.where(~res)
+    np.save('used_features.npy', used_indices)
+    print("Used Features", used_indices)
+
+    train_data = np.delete(train_data, removable_indices, 1)
+    validation_data = np.delete(validation_data, removable_indices, 1)
+    test_data = np.delete(test_data, removable_indices, 1)
 
     print('preprocess done')
 
