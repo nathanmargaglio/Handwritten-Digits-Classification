@@ -207,31 +207,44 @@ def nnObjFunction(params, *args):
     b1 = np.ones((len(training_data), 1))
     b2 = np.ones((len(training_data), 1))
 
+    # logging.debug("w1: " + str(w1[0][:10]))
+
     # Forward Propagation
     X = np.append(training_data, b1, 1)  # append bias
     net1 = X.dot(w1.T)
     o1 = sigmoid(net1)
+    
+    #logging.debug("o1 sum: " + str(o1[0]))
 
     H = np.append(o1, b2, 1)
     net2 = H.dot(w2.T)
     o2 = sigmoid(net2)
 
+    # logging.debug("H: " + str(H[0]))
+    
     # 1-hot encoding
     y = np.zeros(o2.shape)
     y[np.arange(o2.shape[0]), training_label.astype(int)] = 1
 
     # Error
-    E = (y * np.log(o2) + (np.ones(y.shape) - y) * np.log(np.ones(o2.shape) - o2))
+    E = (y * np.log(o2) + (1 - y) * np.log(1 - o2))
     obj_val = -(np.sum(E) / len(training_data))
+   
+    # logging.debug("E: " + str(E))
+    
+    # logging.debug("obj_val: " + str(obj_val))
 
     plt_data.append(obj_val)
 
     # Gradients
     grad_w2 = np.dot((o2 - y).T, H)
+    # logging.debug("grad_w2: " + str(grad_w2[0]));
+
     sm = (o2 - y).dot(w2[:, :-1]).T  # note: we remove the bias from w2
     tm = ((1 - o1) * o1).T
     grad_w1 = (sm * tm).dot(X)
 
+    # logging.debug("grad_w1: " + str(grad_w1[0]))
     # Make sure you reshape the gradient matrices to a 1D array. for instance if your gradient matrices are grad_w1 and grad_w2
     # you would use code similar to the one below to create a flat array
     obj_grad = np.concatenate((grad_w1.flatten(), grad_w2.flatten()), 0)
@@ -308,15 +321,14 @@ if __name__ == '__main__':
     for i in range(500):
         if i % 50 == 0: logger.info("Iter: {}".format(i))
         random_sample_index = np.random.choice(np.arange(len(train_data)), 1000)
-        args = (
-        n_input, n_hidden, n_class, train_data[random_sample_index], train_label[random_sample_index], lambdaval)
+        args = (n_input, n_hidden, n_class, train_data[random_sample_index], train_label[random_sample_index], lambdaval)
         nn_params = minimize(nnObjFunction, iter_weights, jac=True, args=args, method='CG', options=opts)
         iter_weights = nn_params.x
 
     try:
         from terminalplot import plot
         plot_freq = int(len(plt_data)/50)
-        plot(range(len(plt_data))[0::plot_freq], plt_data[0::plot_freq])
+        # plot(range(len(plt_data))[0::plot_freq], plt_data[0::plot_freq])
     except:
         logger.warning("terminalplot not found, skipping...")
         pass
