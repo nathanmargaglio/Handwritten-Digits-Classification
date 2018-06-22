@@ -1,8 +1,23 @@
 import numpy as np
+import logging
 from scipy.optimize import minimize
 from scipy.io import loadmat
 from math import sqrt
 
+logger = logging.getLogger()
+logger.setLevel(logging.DEBUG)
+
+formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
+
+fh = logging.FileHandler('log.txt')
+fh.setLevel(logging.DEBUG)
+fh.setFormatter(formatter)
+logger.addHandler(fh)
+
+ch = logging.StreamHandler()
+ch.setLevel(logging.DEBUG)
+ch.setFormatter(formatter)
+logger.addHandler(ch)
 
 def initializeWeights(n_in, n_out):
     """
@@ -50,6 +65,7 @@ def preprocess():
      Some suggestions for preprocessing step:
      - feature selection"""
 
+    logger.info('preprocess start')
     mat = loadmat('mnist_all.mat')  # loads the MAT object as a Dictionary
 
     # Pick a reasonable size for validation data
@@ -129,13 +145,13 @@ def preprocess():
     removable_indices = np.where(res)
     used_indices = np.where(~res)
     np.save('used_features.npy', used_indices)
-    print("Used Features", used_indices)
+    logger.debug("Used Features", used_indices)
 
     train_data = np.delete(train_data, removable_indices, 1)
     validation_data = np.delete(validation_data, removable_indices, 1)
     test_data = np.delete(test_data, removable_indices, 1)
 
-    print('preprocess done')
+    logger.info('preprocess complete.')
 
     return train_data, train_label, validation_data, validation_label, test_data, test_label
 
@@ -177,7 +193,7 @@ def nnObjFunction(params, *args):
     % w2: matrix of weights of connections from hidden layer to output layers.
     %     w2(i, j) represents the weight of connection from unit j in hidden 
     %     layer to unit i in output layer."""
-
+    
     n_input, n_hidden, n_class, training_data, training_label, lambdaval = args
 
     w1 = params[0:n_hidden * (n_input + 1)].reshape((n_hidden, (n_input + 1)))
@@ -290,13 +306,20 @@ if __name__ == '__main__':
     iter_weights = initialWeights
     plt_data = []
     for i in range(500):
-        print("Iter: {}".format(i))
+        if i % 50 == 0: logger.info("Iter: {}".format(i))
         random_sample_index = np.random.choice(np.arange(len(train_data)), 1000)
         args = (
         n_input, n_hidden, n_class, train_data[random_sample_index], train_label[random_sample_index], lambdaval)
         nn_params = minimize(nnObjFunction, iter_weights, jac=True, args=args, method='CG', options=opts)
         iter_weights = nn_params.x
 
+    try:
+        from terminalplot import plot
+        plot_freq = int(len(plt_data)/50)
+        plot(range(len(plt_data))[0::plot_freq], plt_data[0::plot_freq])
+    except:
+        logger.warning("terminalplot not found, skipping...")
+        pass
     # In Case you want to use fmin_cg, you may have to split the nnObjectFunction to two functions nnObjFunctionVal
     # and nnObjGradient. Check documentation for this function before you proceed.
     # nn_params, cost = fmin_cg(nnObjFunctionVal, initialWeights, nnObjGradient,args = args, maxiter = 50)
@@ -312,16 +335,20 @@ if __name__ == '__main__':
 
     # find the accuracy on Training Dataset
 
-    print('\n Training set Accuracy:' + str(100 * np.mean((predicted_label == train_label).astype(float))) + '%')
+    print()
+    logger.info('Training set Accuracy: ' + str(100 * np.mean((predicted_label == train_label).astype(float))) + '%')
 
     predicted_label = nnPredict(w1, w2, validation_data)
 
     # find the accuracy on Validation Dataset
-
-    print('\n Validation set Accuracy:' + str(100 * np.mean((predicted_label == validation_label).astype(float))) + '%')
+    print()
+    logger.info('Validation set Accuracy: ' + str(100 * np.mean((predicted_label == validation_label).astype(float))) + '%')
 
     predicted_label = nnPredict(w1, w2, test_data)
 
     # find the accuracy on Validation Dataset
+    print()
+    logger.info('Test set Accuracy: ' + str(100 * np.mean((predicted_label == test_label).astype(float))) + '%')
 
-    print('\n Test set Accuracy:' + str(100 * np.mean((predicted_label == test_label).astype(float))) + '%')
+    print()
+    print('Done!')
