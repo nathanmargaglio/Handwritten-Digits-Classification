@@ -284,13 +284,18 @@ if __name__ == '__main__':
     # set the regularization hyper-parameter
     lambdaval = 0
 
-    args = (n_input, n_hidden, n_class, train_data, train_label, lambdaval)
-
     # Train Neural Network using fmin_cg or minimize from scipy,optimize module. Check documentation for a working example
 
-    opts = {'maxiter': 50}  # Preferred value.
-
-    nn_params = minimize(nnObjFunction, initialWeights, jac=True, args=args, method='CG', options=opts)
+    opts = {'maxiter': 1}
+    iter_weights = initialWeights
+    plt_data = []
+    for i in range(500):
+        print("Iter: {}".format(i))
+        random_sample_index = np.random.choice(np.arange(len(train_data)), 1000)
+        args = (
+        n_input, n_hidden, n_class, train_data[random_sample_index], train_label[random_sample_index], lambdaval)
+        nn_params = minimize(nnObjFunction, iter_weights, jac=True, args=args, method='CG', options=opts)
+        iter_weights = nn_params.x
 
     # In Case you want to use fmin_cg, you may have to split the nnObjectFunction to two functions nnObjFunctionVal
     # and nnObjGradient. Check documentation for this function before you proceed.
