@@ -186,13 +186,40 @@ def nnObjFunction(params, *args):
 
     # Your code here
 
-    # Forward Propagation
+    # Set Bias
 
+    b1 = np.ones((len(training_data), 1))
+    b2 = np.ones((len(training_data), 1))
+
+    # Forward Propagation
+    X = np.append(training_data, b1, 1)  # append bias
+    net1 = X.dot(w1.T)
+    o1 = sigmoid(net1)
+
+    H = np.append(o1, b2, 1)
+    net2 = H.dot(w2.T)
+    o2 = sigmoid(net2)
+
+    # 1-hot encoding
+    y = np.zeros(o2.shape)
+    y[np.arange(o2.shape[0]), training_label.astype(int)] = 1
+
+    # Error
+    E = (y * np.log(o2) + (np.ones(y.shape) - y) * np.log(np.ones(o2.shape) - o2))
+    obj_val = -(np.sum(E) / len(training_data))
+
+    plt_data.append(obj_val)
+
+    # Gradients
+    grad_w2 = np.dot((o2 - y).T, H)
+    sm = (o2 - y).dot(w2[:, :-1]).T  # note: we remove the bias from w2
+    tm = ((1 - o1) * o1).T
+    grad_w1 = (sm * tm).dot(X)
 
     # Make sure you reshape the gradient matrices to a 1D array. for instance if your gradient matrices are grad_w1 and grad_w2
     # you would use code similar to the one below to create a flat array
-    # obj_grad = np.concatenate((grad_w1.flatten(), grad_w2.flatten()),0)
-    obj_grad = np.array([])
+    obj_grad = np.concatenate((grad_w1.flatten(), grad_w2.flatten()), 0)
+    # obj_grad = np.array([])
 
     return (obj_val, obj_grad)
 
@@ -215,7 +242,18 @@ def nnPredict(w1, w2, data):
     % label: a column vector of predicted labels"""
 
     labels = np.array([])
-    # Your code here
+    bias = np.ones((len(data), 1))
+
+    # Forward Propagation
+    X = np.append(data, bias, 1)  # append bias
+    net1 = X.dot(w1.T)
+    o1 = sigmoid(net1)
+
+    H = np.append(o1, bias, 1)
+    net2 = H.dot(w2.T)
+    o2 = sigmoid(net2)
+
+    labels = np.array(np.argmax(o2, axis=1))
 
     return labels
 
