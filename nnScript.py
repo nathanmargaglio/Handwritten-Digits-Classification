@@ -227,7 +227,7 @@ def nnObjFunction(params, *args):
     y[np.arange(o2.shape[0]), training_label.astype(int)] = 1
 
     # Regularization
-    reg = (lambdaval / (2 * len(training_data))) * (np.sum(w1) + np.sum(w2))
+    reg = (lambdaval / (2 * len(training_data))) * (np.sum(w1**2) + np.sum(w2**2))
 
     # Error
     E = (y * np.log(o2) + (1 - y) * np.log(1 - o2))
