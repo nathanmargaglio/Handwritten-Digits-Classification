@@ -193,7 +193,7 @@ def nnObjFunction(params, *args):
     % w2: matrix of weights of connections from hidden layer to output layers.
     %     w2(i, j) represents the weight of connection from unit j in hidden 
     %     layer to unit i in output layer."""
-    
+
     n_input, n_hidden, n_class, training_data, training_label, lambdaval = args
 
     w1 = params[0:n_hidden * (n_input + 1)].reshape((n_hidden, (n_input + 1)))
@@ -213,38 +213,41 @@ def nnObjFunction(params, *args):
     X = np.append(training_data, b1, 1)  # append bias
     net1 = X.dot(w1.T)
     o1 = sigmoid(net1)
-    
-    #logging.debug("o1 sum: " + str(o1[0]))
+
+    # logging.debug("o1 sum: " + str(o1[0]))
 
     H = np.append(o1, b2, 1)
     net2 = H.dot(w2.T)
     o2 = sigmoid(net2)
 
     # logging.debug("H: " + str(H[0]))
-    
+
     # 1-hot encoding
     y = np.zeros(o2.shape)
     y[np.arange(o2.shape[0]), training_label.astype(int)] = 1
 
+    # Regularization
+    reg = (lambdaval / (2 * len(training_data))) * (np.sum(w1) + np.sum(w2))
+
     # Error
     E = (y * np.log(o2) + (1 - y) * np.log(1 - o2))
-    obj_val = -(np.sum(E) / len(training_data))
-   
+    obj_val = -(np.sum(E) / len(training_data)) + reg
+
     # logging.debug("E: " + str(E))
-    
+
     # logging.debug("obj_val: " + str(obj_val))
 
     plt_data.append(obj_val)
 
     # Gradients
-    grad_w2 = np.dot((o2 - y).T, H)
-    # logging.debug("grad_w2: " + str(grad_w2[0]));
+    grad_w2 = (1. / len(training_data)) * (np.dot((o2 - y).T, H) + lambdaval * w2)
+    # print("grad_w2: " + str(grad_w2[0]))
 
     sm = (o2 - y).dot(w2[:, :-1]).T  # note: we remove the bias from w2
     tm = ((1 - o1) * o1).T
-    grad_w1 = (sm * tm).dot(X)
+    grad_w1 = (1. / len(training_data)) * ((sm * tm).dot(X) + lambdaval * w1)
 
-    # logging.debug("grad_w1: " + str(grad_w1[0]))
+    # print("grad_w1: " + str(grad_w1[0]))
     # Make sure you reshape the gradient matrices to a 1D array. for instance if your gradient matrices are grad_w1 and grad_w2
     # you would use code similar to the one below to create a flat array
     obj_grad = np.concatenate((grad_w1.flatten(), grad_w2.flatten()), 0)
@@ -315,6 +318,13 @@ if __name__ == '__main__':
 
     # Train Neural Network using fmin_cg or minimize from scipy,optimize module. Check documentation for a working example
 
+    opts = {'maxiter': 50}
+    plt_data = []
+    args = (n_input, n_hidden, n_class, train_data, train_label, lambdaval)
+    nn_params = minimize(nnObjFunction, initialWeights, jac=True, args=args, method='CG', options=opts)
+
+    """
+    # Batches
     opts = {'maxiter': 1}
     iter_weights = initialWeights
     plt_data = []
@@ -332,6 +342,7 @@ if __name__ == '__main__':
     except:
         logger.warning("terminalplot not found, skipping...")
         pass
+    """
     # In Case you want to use fmin_cg, you may have to split the nnObjectFunction to two functions nnObjFunctionVal
     # and nnObjGradient. Check documentation for this function before you proceed.
     # nn_params, cost = fmin_cg(nnObjFunctionVal, initialWeights, nnObjGradient,args = args, maxiter = 50)
