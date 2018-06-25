@@ -145,12 +145,14 @@ def preprocess():
     removable_indices = np.where(res)
     used_indices = np.where(~res)
     np.save('used_features.npy', used_indices)
-    logger.debug("Used Features", used_indices)
+    # logger.debug("Used Features", used_indices)
 
     train_data = np.delete(train_data, removable_indices, 1)
     validation_data = np.delete(validation_data, removable_indices, 1)
     test_data = np.delete(test_data, removable_indices, 1)
 
+    logger.info("Training Set Shape: " + str(train_data.shape))
+    logger.info("Training Labels Shape: " + str(train_label.shape))
     logger.info('preprocess complete.')
 
     return train_data, train_label, validation_data, validation_label, test_data, test_label
@@ -334,15 +336,16 @@ if __name__ == '__main__':
         args = (n_input, n_hidden, n_class, train_data[random_sample_index], train_label[random_sample_index], lambdaval)
         nn_params = minimize(nnObjFunction, iter_weights, jac=True, args=args, method='CG', options=opts)
         iter_weights = nn_params.x
+    """
 
     try:
-        from terminalplot import plot
-        plot_freq = int(len(plt_data)/50)
-        # plot(range(len(plt_data))[0::plot_freq], plt_data[0::plot_freq])
+        import matplotlib.pyplot as plt
+        plt.plot(plt_data)
+        plt.show()
     except:
-        logger.warning("terminalplot not found, skipping...")
+        logger.warning("matplotlib not found, skipping...")
         pass
-    """
+
     # In Case you want to use fmin_cg, you may have to split the nnObjectFunction to two functions nnObjFunctionVal
     # and nnObjGradient. Check documentation for this function before you proceed.
     # nn_params, cost = fmin_cg(nnObjFunctionVal, initialWeights, nnObjGradient,args = args, maxiter = 50)
@@ -354,12 +357,12 @@ if __name__ == '__main__':
 
     # Test the computed parameters
 
-    predicted_label = nnPredict(w1, w2, train_data)
+    predicted_label = nnPredict(w1, w2, train_data[:10])
 
     # find the accuracy on Training Dataset
 
     print()
-    logger.info('Training set Accuracy: ' + str(100 * np.mean((predicted_label == train_label).astype(float))) + '%')
+    logger.info('Training set Accuracy: ' + str(100 * np.mean((predicted_label == train_label[:10]).astype(float))) + '%')
 
     predicted_label = nnPredict(w1, w2, validation_data)
 
