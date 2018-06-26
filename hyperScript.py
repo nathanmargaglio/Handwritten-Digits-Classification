@@ -23,13 +23,10 @@ logger.addHandler(ch)
 
 # check if log dir exists, if not, make it
 log_dir = 'logging/'
-error_dir = 'logging/error_plots/'
-accuracy_dir = 'logging/accuracy_plots/'
-pickle_dir = 'logging/pickle_data/'
+pickle_dir = log_dir + '/pickle_data/'
 
-for directory in [log_dir, error_dir, accuracy_dir, pickle_dir]:
-    if not os.path.exists(directory):
-        os.makedirs(directory)
+if not os.path.exists(pickle_dir):
+    os.makedirs(pickle_dir)
 
 log_count = len([lf for lf in os.listdir(log_dir) if 'log_' in lf])
 
@@ -79,13 +76,13 @@ for n_hidden in n_hiddens:
         nn_params = minimize(nnObjFunction, initialWeights,
                              jac=True, args=args, method='CG', options=opts)
 
-        plt.plot(builtins.logging_data['plt_data'])
-        plt.title('Training Error')
-        plt.ylabel('error (obj_val)')
-        plt.xlabel('iteration')
-        plt.ylim(0, 10)
-        plt.savefig(error_dir + iter_name + '.png', bbox_inches='tight')
-        plt.cla()
+        # plt.plot(builtins.logging_data['plt_data'])
+        # plt.title('Training Error')
+        # plt.ylabel('error (obj_val)')
+        # plt.xlabel('iteration')
+        # plt.ylim(0, 10)
+        # plt.savefig(error_dir + iter_name + '.png', bbox_inches='tight')
+        # plt.cla()
 
         w1 = nn_params.x[0:n_hidden * (n_input + 1)]\
             .reshape((n_hidden, (n_input + 1)))
@@ -127,3 +124,27 @@ for n_hidden in n_hiddens:
             timedelta(seconds=total_processing_time_iteration_delta))))
         logger.info("Total Processing Time:     {}".format(str(
             timedelta(seconds=total_processing_time_delta))))
+
+        params_pickle = {
+            'n_hidden': n_hidden,
+            'lambdaval': lambdaval,
+            'selected_features': builtins.selected_features,
+            'w1': w1,
+            'w2': w2
+        }
+
+        logging_pickle = {
+            'n_hidden': n_hidden,
+            'lambdaval': lambdaval,
+            'time': total_processing_time_iteration_delta,
+            'train_acc': training_accuracy,
+            'val_acc': validation_accuracy,
+            'test_accuracy': test_accuracy,
+            'iter_error': builtins.logging_data['plt_data']
+        }
+
+        with open(pickle_dir + iter_name + '_params.pickle', 'wb') as f:
+            pickle.dump(params_pickle, f)
+
+        with open(pickle_dir + iter_name + '_log.pickle', 'wb') as f:
+            pickle.dump(logging_pickle, f)

@@ -130,9 +130,11 @@ def preprocess():
     # Feature selection
     res = np.all(train_data == train_data[0, :], axis=0)
     removable_indices = np.where(res)
-    used_indices = np.where(~res)
-    np.save('used_features.npy', used_indices)
-    # logger.debug("Used Features", used_indices)
+    selected_features = np.where(~res)
+    try:
+        builtins.selected_features = selected_features
+    except:
+        pass
 
     train_data = np.delete(train_data, removable_indices, 1)
     validation_data = np.delete(validation_data, removable_indices, 1)
