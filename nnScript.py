@@ -3,21 +3,9 @@ import logging
 from scipy.optimize import minimize
 from scipy.io import loadmat
 from math import sqrt
-
-logger = logging.getLogger()
-logger.setLevel(logging.DEBUG)
-
-formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
-
-fh = logging.FileHandler('log.txt')
-fh.setLevel(logging.DEBUG)
-fh.setFormatter(formatter)
-logger.addHandler(fh)
-
-ch = logging.StreamHandler()
-ch.setLevel(logging.DEBUG)
-ch.setFormatter(formatter)
-logger.addHandler(ch)
+from time import time
+from datetime import timedelta
+import builtins
 
 def initializeWeights(n_in, n_out):
     """
@@ -27,8 +15,8 @@ def initializeWeights(n_in, n_out):
     # Input:
     # n_in: number of nodes of the input layer
     # n_out: number of nodes of the output layer
-       
-    # Output: 
+
+    # Output:
     # W: matrix of random initial weights with size (n_out x (n_in + 1))"""
 
     epsilon = sqrt(6) / sqrt(n_in + n_out + 1)
@@ -49,15 +37,15 @@ def preprocess():
      the MNIST data set from file 'mnist_all.mat'.
 
      Output:
-     train_data: matrix of training set. Each row of train_data contains 
+     train_data: matrix of training set. Each row of train_data contains
        feature vector of a image
      train_label: vector of label corresponding to each image in the training
        set
-     validation_data: matrix of training set. Each row of validation_data 
+     validation_data: matrix of training set. Each row of validation_data
        contains feature vector of a image
-     validation_label: vector of label corresponding to each image in the 
+     validation_label: vector of label corresponding to each image in the
        training set
-     test_data: matrix of training set. Each row of test_data contains 
+     test_data: matrix of training set. Each row of test_data contains
        feature vector of a image
      test_label: vector of label corresponding to each image in the testing
        set
@@ -65,7 +53,6 @@ def preprocess():
      Some suggestions for preprocessing step:
      - feature selection"""
 
-    logger.info('preprocess start')
     mat = loadmat('mnist_all.mat')  # loads the MAT object as a Dictionary
 
     # Pick a reasonable size for validation data
@@ -151,16 +138,12 @@ def preprocess():
     validation_data = np.delete(validation_data, removable_indices, 1)
     test_data = np.delete(test_data, removable_indices, 1)
 
-    logger.info("Training Set Shape: " + str(train_data.shape))
-    logger.info("Training Labels Shape: " + str(train_label.shape))
-    logger.info('preprocess complete.')
-
     return train_data, train_label, validation_data, validation_label, test_data, test_label
 
 
 def nnObjFunction(params, *args):
-    """% nnObjFunction computes the value of objective function (negative log 
-    %   likelihood error function with regularization) given the parameters 
+    """% nnObjFunction computes the value of objective function (negative log
+    %   likelihood error function with regularization) given the parameters
     %   of Neural Networks, the training data, their corresponding training
     %   labels and lambda - regularization hyper-parameter.
 
@@ -179,8 +162,8 @@ def nnObjFunction(params, *args):
     %     in the vector represents the truth label of its corresponding image.
     % lambda: regularization hyper-parameter. This value is used for fixing the
     %     overfitting problem.
-       
-    % Output: 
+
+    % Output:
     % obj_val: a scalar value representing value of error function
     % obj_grad: a SINGLE vector of gradient value of error function
     % NOTE: how to compute obj_grad
@@ -190,11 +173,28 @@ def nnObjFunction(params, *args):
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     % reshape 'params' vector into 2 matrices of weight w1 and w2
     % w1: matrix of weights of connections from input layer to hidden layers.
-    %     w1(i, j) represents the weight of connection from unit j in input 
+    %     w1(i, j) represents the weight of connection from unit j in input
     %     layer to unit i in hidden layer.
     % w2: matrix of weights of connections from hidden layer to output layers.
-    %     w2(i, j) represents the weight of connection from unit j in hidden 
+    %     w2(i, j) represents the weight of connection from unit j in hidden
     %     layer to unit i in output layer."""
+
+    try:
+        logger = builtins.logger
+        logging_data = builtins.logging_data
+        start_time = logging_data['start_time']
+        current_time = logging_data['current_time']
+        time_delta = time() - current_time
+        logging_data['current_time'] = time()
+        total_time = time() - start_time
+
+        logger.info(' - Iteration:  ' + str(logging_data['iter']))
+        logger.info(' - Time Delta: ' + str(timedelta(seconds=time_delta)))
+        logger.info(' - Total Time: ' + str(timedelta(seconds=total_time)))
+        logging_data['iter'] += 1
+    except NameError:
+        #logger/logging_data isn't defined, so we can't log
+        pass
 
     n_input, n_hidden, n_class, training_data, training_label, lambdaval = args
 
@@ -239,7 +239,10 @@ def nnObjFunction(params, *args):
 
     # logging.debug("obj_val: " + str(obj_val))
 
-    plt_data.append(obj_val)
+    try:
+        logging_data['plt_data'].append(obj_val)
+    except NameError:
+        pass
 
     # Gradients
     grad_w2 = (1. / len(training_data)) * (np.dot((o2 - y).T, H) + lambdaval * w2)
@@ -264,15 +267,15 @@ def nnPredict(w1, w2, data):
 
     % Input:
     % w1: matrix of weights of connections from input layer to hidden layers.
-    %     w1(i, j) represents the weight of connection from unit i in input 
+    %     w1(i, j) represents the weight of connection from unit i in input
     %     layer to unit j in hidden layer.
     % w2: matrix of weights of connections from hidden layer to output layers.
-    %     w2(i, j) represents the weight of connection from unit i in input 
+    %     w2(i, j) represents the weight of connection from unit i in input
     %     layer to unit j in hidden layer.
-    % data: matrix of data. Each row of this matrix represents the feature 
+    % data: matrix of data. Each row of this matrix represents the feature
     %       vector of a particular image
-       
-    % Output: 
+
+    % Output:
     % label: a column vector of predicted labels"""
 
     labels = np.array([])
@@ -291,8 +294,25 @@ def nnPredict(w1, w2, data):
 
     return labels
 
+
+
 # to aid with importing
 if __name__ == '__main__':
+    logger = logging.getLogger()
+    logger.setLevel(logging.DEBUG)
+
+    formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
+
+    fh = logging.FileHandler('log.txt')
+    fh.setLevel(logging.DEBUG)
+    fh.setFormatter(formatter)
+    logger.addHandler(fh)
+
+    ch = logging.StreamHandler()
+    ch.setLevel(logging.DEBUG)
+    ch.setFormatter(formatter)
+    logger.addHandler(ch)
+
     """**************Neural Network Script Starts here********************************"""
 
     train_data, train_label, validation_data, validation_label, test_data, test_label = preprocess()
@@ -322,6 +342,7 @@ if __name__ == '__main__':
 
     opts = {'maxiter': 50}
     plt_data = []
+    iteration = 0
     args = (n_input, n_hidden, n_class, train_data, train_label, lambdaval)
     nn_params = minimize(nnObjFunction, initialWeights, jac=True, args=args, method='CG', options=opts)
 
