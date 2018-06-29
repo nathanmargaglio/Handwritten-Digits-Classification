@@ -114,7 +114,7 @@ for n_layers in [3, 5, 7]:
     batch_size = 100
 
     # Construct model
-    pred,x,y = create_multilayer_perceptron()
+    pred,x,y = create_multilayer_perceptron(n_layers)
 
     # Define loss and optimizer
     cost = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(logits=pred, labels=y))
