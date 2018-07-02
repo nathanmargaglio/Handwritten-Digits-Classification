@@ -7,71 +7,24 @@ import logging
 from scipy.optimize import minimize
 from scipy.io import loadmat
 from math import sqrt
+import builtins
+import logging
+from time import time
 import pickle
+import os
+from datetime import timedelta
 
-# Do not change this
 def initializeWeights(n_in,n_out):
-    """
-    # initializeWeights return the random weights for Neural Network given the
-    # number of node in the input layer and output layer
-
-    # Input:
-    # n_in: number of nodes of the input layer
-    # n_out: number of nodes of the output layer
-                            
-    # Output: 
-    # W: matrix of random initial weights with size (n_out x (n_in + 1))"""
-    epsilon = sqrt(6) / sqrt(n_in + n_out + 1);
-    W = (np.random.rand(n_out, n_in + 1)*2* epsilon) - epsilon;
+    epsilon = sqrt(6) / sqrt(n_in + n_out + 1)
+    W = (np.random.rand(n_out, n_in + 1)*2* epsilon) - epsilon
     return W
 
 
-
-# Replace this with your sigmoid implementation
 def sigmoid(z):
-    """# Notice that z can be a scalar, a vector or a matrix
-    # return the sigmoid of input z"""
-
     return 1./(1. + np.exp(-z))
 
 
 def nnObjFunction(params, *args):
-    """% nnObjFunction computes the value of objective function (negative log
-    %   likelihood error function with regularization) given the parameters
-    %   of Neural Networks, the training data, their corresponding training
-    %   labels and lambda - regularization hyper-parameter.
-
-    % Input:
-    % params: vector of weights of 2 matrices w1 (weights of connections from
-    %     input layer to hidden layer) and w2 (weights of connections from
-    %     hidden layer to output layer) where all of the weights are contained
-    %     in a single vector.
-    % n_input: number of node in input layer (not include the bias node)
-    % n_hidden: number of node in hidden layer (not include the bias node)
-    % n_class: number of node in output layer (number of classes in
-    %     classification problem
-    % training_data: matrix of training data. Each row of this matrix
-    %     represents the feature vector of a particular image
-    % training_label: the vector of truth label of training images. Each entry
-    %     in the vector represents the truth label of its corresponding image.
-    % lambda: regularization hyper-parameter. This value is used for fixing the
-    %     overfitting problem.
-
-    % Output:
-    % obj_val: a scalar value representing value of error function
-    % obj_grad: a SINGLE vector of gradient value of error function
-    % NOTE: how to compute obj_grad
-    % Use backpropagation algorithm to compute the gradient of error function
-    % for each weights in weight matrices.
-
-    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-    % reshape 'params' vector into 2 matrices of weight w1 and w2
-    % w1: matrix of weights of connections from input layer to hidden layers.
-    %     w1(i, j) represents the weight of connection from unit j in input
-    %     layer to unit i in hidden layer.
-    % w2: matrix of weights of connections from hidden layer to output layers.
-    %     w2(i, j) represents the weight of connection from unit j in hidden
-    %     layer to unit i in output layer."""
 
     n_input, n_hidden, n_class, training_data, training_label, lambdaval = args
 
@@ -134,21 +87,6 @@ def nnObjFunction(params, *args):
 
 
 def nnPredict(w1, w2, data):
-    """% nnPredict predicts the label of data given the parameter w1, w2 of Neural
-    % Network.
-
-    % Input:
-    % w1: matrix of weights of connections from input layer to hidden layers.
-    %     w1(i, j) represents the weight of connection from unit i in input
-    %     layer to unit j in hidden layer.
-    % w2: matrix of weights of connections from hidden layer to output layers.
-    %     w2(i, j) represents the weight of connection from unit i in input
-    %     layer to unit j in hidden layer.
-    % data: matrix of data. Each row of this matrix represents the feature
-    %       vector of a particular image
-
-    % Output:
-    % label: a column vector of predicted labels"""
 
     labels = np.array([])
     bias = np.ones((len(data), 1))
@@ -182,6 +120,34 @@ def preprocess():
     return train_x, train_y, valid_x, valid_y, test_x, test_y
 
 """**************Neural Network Script Starts here********************************"""
+
+
+logger = logging.getLogger()
+logger.setLevel(logging.DEBUG)
+
+formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
+
+ch = logging.StreamHandler()
+ch.setLevel(logging.DEBUG)
+ch.setFormatter(formatter)
+logger.addHandler(ch)
+
+# check if log dir exists, if not, make it
+log_dir = 'logging/'
+pickle_dir = log_dir + '/pickle_data/'
+
+if not os.path.exists(pickle_dir):
+    os.makedirs(pickle_dir)
+
+log_count = len([lf for lf in os.listdir(log_dir) if 'face_log_' in lf])
+
+fh = logging.FileHandler(log_dir + 'face_log_{}.txt'.format(log_count))
+fh.setLevel(logging.DEBUG)
+fh.setFormatter(formatter)
+logger.addHandler(fh)
+
+builtins.logger = logger
+
 train_data, train_label, validation_data, validation_label, test_data, test_label = preprocess()
 #  Train Neural Network
 # set the number of nodes in input unit (not including bias unit)
@@ -197,11 +163,15 @@ initial_w2 = initializeWeights(n_hidden, n_class)
 # unroll 2 weight matrices into single column vector
 initialWeights = np.concatenate((initial_w1.flatten(), initial_w2.flatten()),0)
 # set the regularization hyper-parameter
-lambdaval = 10
+lambdaval = 30
 args = (n_input, n_hidden, n_class, train_data, train_label, lambdaval)
 
 #Train Neural Network using fmin_cg or minimize from scipy,optimize module. Check documentation for a working example
-opts = {'maxiter' :50}    # Preferred value.
+opts = {'maxiter': 50}    # Preferred value.
+
+total_processing_time = time()
+total_processing_time_current = total_processing_time
+total_processing_count = 0
 
 nn_params = minimize(nnObjFunction, initialWeights, jac=True, args=args,method='CG', options=opts)
 params = nn_params.get('x')
@@ -209,13 +179,54 @@ params = nn_params.get('x')
 w1 = params[0:n_hidden * (n_input + 1)].reshape( (n_hidden, (n_input + 1)))
 w2 = params[(n_hidden * (n_input + 1)):].reshape((n_class, (n_hidden + 1)))
 
-#Test the computed parameters
-predicted_label = nnPredict(w1,w2,train_data)
-#find the accuracy on Training Dataset
-print('\n Training set Accuracy:' + str(100*np.mean((predicted_label == train_label).astype(float))) + '%')
-predicted_label = nnPredict(w1,w2,validation_data)
-#find the accuracy on Validation Dataset
-print('\n Validation set Accuracy:' + str(100*np.mean((predicted_label == validation_label).astype(float))) + '%')
-predicted_label = nnPredict(w1,w2,test_data)
-#find the accuracy on Validation Dataset
-print('\n Test set Accuracy:' +  str(100*np.mean((predicted_label == test_label).astype(float))) + '%')
+training_predicted_label = nnPredict(w1, w2, train_data)
+training_accuracy = np.mean((training_predicted_label ==
+                             train_label).astype(float))
+logger.info('Training Set Accuracy:   ' +
+            str(100 * training_accuracy) + '%')
+
+validation_predicted_label = nnPredict(w1, w2, validation_data)
+validation_accuracy = np.mean((validation_predicted_label ==
+                               validation_label).astype(float))
+logger.info('Validation Set Accuracy: ' +
+            str(100 * validation_accuracy) + '%')
+
+test_predicted_label = nnPredict(w1, w2, test_data)
+test_accuracy = np.mean((test_predicted_label ==
+                         test_label).astype(float))
+logger.info('Test Set Accuracy:       ' +
+            str(100 * test_accuracy) + '%')
+
+total_processing_time_iteration = total_processing_time_current
+total_processing_time_current = time()
+total_processing_time_iteration_delta =\
+    total_processing_time_current - total_processing_time_iteration
+total_processing_time_delta =\
+    total_processing_time_current - total_processing_time
+
+logger.info("Iteration Processing Time: {}".format(str(
+    timedelta(seconds=total_processing_time_iteration_delta))))
+logger.info("Total Processing Time:     {}".format(str(
+    timedelta(seconds=total_processing_time_delta))))
+
+params_pickle = {
+    'n_hidden': n_hidden,
+    'lambdaval': lambdaval,
+    'w1': w1,
+    'w2': w2
+}
+
+logging_pickle = {
+    'n_hidden': n_hidden,
+    'lambdaval': lambdaval,
+    'time': total_processing_time_iteration_delta,
+    'train_acc': training_accuracy,
+    'val_acc': validation_accuracy,
+    'test_accuracy': test_accuracy
+}
+
+with open(pickle_dir + 'face_params.pickle', 'wb') as f:
+    pickle.dump(params_pickle, f)
+
+with open(pickle_dir + 'face_log.pickle', 'wb') as f:
+    pickle.dump(logging_pickle, f)

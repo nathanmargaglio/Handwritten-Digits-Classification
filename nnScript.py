@@ -361,14 +361,6 @@ if __name__ == '__main__':
         iter_weights = nn_params.x
     """
 
-    try:
-        import matplotlib.pyplot as plt
-        plt.plot(plt_data)
-        plt.show()
-    except:
-        logger.warning("matplotlib not found, skipping...")
-        pass
-
     # In Case you want to use fmin_cg, you may have to split the nnObjectFunction to two functions nnObjFunctionVal
     # and nnObjGradient. Check documentation for this function before you proceed.
     # nn_params, cost = fmin_cg(nnObjFunctionVal, initialWeights, nnObjGradient,args = args, maxiter = 50)

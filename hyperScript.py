@@ -3,7 +3,6 @@ from time import time
 import pickle
 import os
 from datetime import timedelta
-import matplotlib.pyplot as plt
 import numpy as np
 from scipy.optimize import minimize
 import builtins
