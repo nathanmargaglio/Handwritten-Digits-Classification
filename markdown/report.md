@@ -99,6 +99,9 @@ We log the training set and validation set accuracy as well as the time it takes
     Training Accuracy: 0.9543602
     Validation Accuracy: 0.76472795
 
+![png](output_layers.png)
+![png](output_layers_time.png)
+\pagebreak
 
 The results are follow our intuition:
 
