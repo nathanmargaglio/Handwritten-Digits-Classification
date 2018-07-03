@@ -40,7 +40,7 @@ In this implementation, we use the sigmoid function
 	\sigma(z) = \dfrac{1}{1 + e^{-z}}
 \end{equation}
 
-as our activation function throughout the network.  The objective function our network minimizes is the log-likelihood error function, and we incorporate regularization to reduce complexity, and thus overfitting, of our neural network.
+as our activation function throughout the network.  The objective function our network minimizes is the negative log-likelihood error function, and we incorporate regularization to reduce complexity, and thus overfitting, of our neural network.
 
 ### Tuning Hyper-Parameters for our Neural Network
 
