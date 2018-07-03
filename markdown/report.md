@@ -1,42 +1,52 @@
-\begin{titlepage}
-    \begin{center}
-        \vspace*{1cm}
-        
-        \textbf{Handwrittern Digits Classification}
-        
-        \vspace{0.5cm}
-        CSE574 - Intro to Machine Learning
-        
-        \vspace{1.5cm}
-        
-        \textbf{Isabela Lago}
+\begin{titlepage} \begin{center} \vspace*{1cm}
 
-	\vspace{0.5cm}
-	\textbf{Nathan Margaglio}
+    \textbf{Handwrittern Digits Classification}
+    
+    \vspace{0.5cm}
+    CSE574 - Intro to Machine Learning
+    
+    \vspace{1.5cm}
+    
+    \textbf{Isabela Lago}
 
-	\vspace{0.5cm}
-	\textbf{Timothy Schuler}
-        
-        \vfill
-        
-    \end{center}
+\vspace{0.5cm}
+\textbf{Nathan Margaglio}
+
+\vspace{0.5cm}
+\textbf{Timothy Schuler}
+    
+    \vfill
+    
+\end{center}
 \end{titlepage}
 
 # Introduction
 
-For this project, our group is required to implement a neural network to classify images of handwritten digits.  Specifically, we are given a subset of the MNIST handwritten digits dataset (which consists of black and white, 28x28 images of the numbers 0 through 9) for which we need to code and train a neural network with a single hidden layer to accurately classify.
+For this project, our group is required to implement a neural network to classify images.  For the first portion of this project, we are given a subset of the MNIST handwritten digits dataset (which consists of black and white, 28x28 images of the numbers 0 through 9) for which we need to code and train a neural network with a single hidden layer to accurately classify.  In the second portion of this project, we transition our neural network to train on the CelebFaces Attributes Dataset (CelebA) to classify pictures of faces as either having glasses or no glasses.  We then implement a multi-layered deep neural network, trained on the CelebA set as well, using Tensorflow to compare the affect of the number of layers on training time and accuracy.
 
-In order to do this, we need to implement the forward pass and back propagation algorithms for a neural network, incorporate regularization on the weights to account for over fitting, find and ignore features that don't contribute usable data to our network, and use a validation data set to tune hyper-parameters for the network (number of hidden units and $\lambda$ for regularization).
-
-We also use our code to train a similar neural network on the CelebFaces Attributes Dataset (CelebA) to classify pictures of faces as either having glasses or no glasses.  We then will implement a multi-layered deep neural network, trained on the CelebA set as well, using Tensorflow to compare the affects of the number of layers on execution time and accuracy.
+In order to do this, we need to implement the forward pass and back propagation algorithms for a neural network, incorporate regularization on the weights to account for over fitting, find and ignore features that don't contribute usable data to our network, and use a validation data set to tune hyper-parameters for the network ( which, in this case, is the number of hidden units and $\lambda$ coefficient for regularization).
 
 # MNIST Handwritten Digits
 
-For the first part of this project, we will be working with the MNIST handwritten digits dataset.  Our focus is on building a neural network and choosing optimal hyper-parameters for training.
+For the first part of this project, we work with the MNIST handwritten digits dataset.  Our focus is on building a neural network and choosing optimal hyper-parameters for training.
 
-### Choosing Hyper-Parameters for our Neural Network
+### Implementing a Feed-Forward Neural Network
+
+Before training on the MNIST dataset, we implement a feed-forward neural network with one hidden layer and use backpropagation in order to calculate the gradient of the weights throughout the neural network.  We then use the gradients to adjust the weights so that our objective function is minimized.  We use the minimize function from the Python library Scipy to run the actual optimization process.
+
+In this implementation, we use the sigmoid function
+
+\begin{equation}
+	\sigma(z) = \dfrac{1}{1 + e^{-z}}
+\end{equation}
+
+as our activation function throughout the network.  The objective function our network minimizes is the log-likelihood error function, and we incorporate regularization to reduce complexity, and thus overfitting, of our neural network.
+
+### Tuning Hyper-Parameters for our Neural Network
 
 Once we have implemented the neural network, we need to decide which hyper-parameters to choose in order to find the best results.  In this project, we need to only concern ourselves with the number of hidden units and $\lambda$, the regularization coefficient.  We also remove features from the dataset that do not contribute useful data, i.e., if the nth feature of every training example is the same, then we remove it from each input as it can't contribute to learning to classify different examples.
+
+For the process of feature selection, we considered the input data given from our training set.  In this case, every training example is a vector of length 784 (which comes from the flattened matrix representing the 28x28 images of each handwritten digit).  We noted every index whose value was the same throughout the training set, and removed those features from the training set altogether.  This process assures that every input feature contributes to the neural networks training, so as to reduce computation time and complexity be eliminating meaningless input.
 
 We chose to test combinations of number of hidden units and $\lambda$ and compare results.  We tested 4, 8, 12, 16, 20, 25, and 50 for the number of hidden layers and 0, 10, 20, 30, 40, 50, and 60 for $\lambda$.  The following our the plots of the resulting accuracy for the MNIST validation data set for each model:
 
@@ -48,7 +58,7 @@ We notice two things:  as $\lambda$ goes up, accuracy tends to go down, and as n
 
 Ultimately, it is clear that the more hidden units we have (at least up to 50), the better the accuracy.  For $\lambda$, an optimal value isn't as clear from these plots, but we consider a value of 30 to be generally good given these examples.
 
-The best model we produced used 50 hidden units with a $\lambda$ of 10.  This is what we used in our *params.pickle* file, and, in our tests, yields a training set accuracy of 95.4%, a validation set accuracy of 94.8%, a test set accuracy of 95.0%, all with a training time of about 1 minute and 38 seconds.
+The best model we produced used 50 hidden units with a $\lambda$ of 10.  This is what we used in our $params.pickle$ file, and, in our tests, yields a training set accuracy of 95.4%, a validation set accuracy of 94.8%, a test set accuracy of 95.0%, all with a training time of about 1 minute and 38 seconds.
 
 ### Training Time Versus Number of Hidden Units
 
